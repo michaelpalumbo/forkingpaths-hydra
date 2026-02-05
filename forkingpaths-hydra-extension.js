@@ -1,6 +1,7 @@
 (function() {
+  // 1. Prevent multiple connections on re-run
   if (window.forkingPathsInitialized) {
-    console.log("[FP] Already initialized. Closing old socket...");
+    console.log("[FP] Re-initializing... Closing old socket.");
     window.fpSocket.close();
   }
 
@@ -12,48 +13,52 @@
 
   window.fpSocket.onopen = () => console.log("%c[FP] Connected to Forking Paths", "color: #2ecc71; font-weight: bold;");
 
-  // 1. IMPROVED: Logs the parsed data so you can see cmd, param, etc.
+  // 2. Listener for incoming messages from Forking Paths
   window.fpSocket.onmessage = (e) => { 
     try {
       const msg = JSON.parse(e.data);
-      console.log("[FP] Received:", msg);
+      console.log("[FP] Received Message:", msg);
+      // Future logic for updating the editor goes here
     } catch (err) {
       console.log("[FP] Raw Message:", e.data);
-    }
-  }
-
-  const sendToFP = (cmd, data) => {
-    if (window.fpSocket.readyState === WebSocket.OPEN) {
-      window.fpSocket.send(JSON.stringify({
-        cmd: cmd,
-        appName: APP_NAME,
-        ...data
-      }));
     }
   };
 
   const handler = (e) => {
+    // We must grab the CodeMirror instance inside the handler to get the latest state
     const cm = document.querySelector('.CodeMirror').CodeMirror;
+    
+    // Define these variables here so they are available for both IF blocks
     const cursor = cm.getCursor();
     const lineNo = cursor.line;
     const lineContent = cm.getLine(lineNo).trim();
-    
-    // 2. FIXED: Use window.fpSocket instead of 'socket'
+
+    if (window.fpSocket.readyState !== WebSocket.OPEN) return;
+
+    // CTRL + SHIFT + ENTER -> KEYFRAME (Full Snapshot)
     if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
-      sendToFP("keyFrame", { data: { "hydraCode": cm.getValue() } });
-      console.log("[FP] Sent Keyframe");
+      window.fpSocket.send(JSON.stringify({
+        cmd: "keyFrame",
+        appName: APP_NAME,
+        data: { "hydraCode": cm.getValue() }
+      }));
+      console.log("[FP] Keyframe (All) Sent");
     } 
+    // CTRL + ENTER -> MICRO_CHANGE (Single Line)
     else if (e.ctrlKey && e.key === 'Enter') {
       if (lineContent.length > 0) {
-        sendToFP("micro_change", { 
+        window.fpSocket.send(JSON.stringify({
+          cmd: "micro_change",
+          appName: APP_NAME,
           param: `line_${lineNo}`, 
-          value: lineContent 
-        });
-        console.log(`[FP] Sent Micro-change for line ${lineNo}`);
+          value: lineContent
+        }));
+        console.log(`[FP] Micro-change (Line ${lineNo}) Sent`);
       }
     }
   };
 
+  // 3. Clean up and re-attach listener
   window.removeEventListener('keydown', window._fpHandler, true);
   window._fpHandler = handler;
   window.addEventListener('keydown', window._fpHandler, true);
