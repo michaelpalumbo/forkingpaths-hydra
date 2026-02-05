@@ -75,7 +75,7 @@
         window.fpSocket.send(JSON.stringify(
           {
             "cmd": "keyFrame",
-            "appName": "hydra,
+            "appName": "hydra",
             "data": {
               "full_code": sanitizedAll
             },
