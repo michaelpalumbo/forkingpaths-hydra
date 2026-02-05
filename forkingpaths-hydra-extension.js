@@ -1,56 +1,46 @@
+(function() {
+  // Prevent duplicate initialization
+  if (window.forkingPathsInitialized) {
+    console.log("[FP] Already initialized. Closing old socket...");
+    window.fpSocket.close();
+  }
 
-/**
- * Forking Paths x Hydra Extension
- * Connects to: ws://127.0.0.1:3001/ws
- * (for dev/testing): Can place directly within hydra code, then update hydra code below it. Once it's working great, could 
- */
-
-(async () => {
   const FP_URL = 'ws://127.0.0.1:3001/ws';
   const APP_NAME = "HydraVideoSynth";
-  let socket;
+  
+  window.fpSocket = new WebSocket(FP_URL);
+  window.forkingPathsInitialized = true;
 
-  const connect = () => {
-    socket = new WebSocket(FP_URL);
-    socket.onopen = () => console.log("%c[FP] Connected", "color: #2ecc71; font-weight: bold;");
-    socket.onclose = () => setTimeout(connect, 3000);
-  };
-  connect();
+  window.fpSocket.onopen = () => console.log("%c[FP] Connected to Forking Paths", "color: #2ecc71; font-weight: bold;");
 
-  const getEditorData = () => {
-    const cm = document.querySelector('.CodeMirror').CodeMirror;
-    return {
-      allCode: cm.getValue(),
-      currentLine: cm.getLine(cm.getCursor().line).trim()
-    };
-  };
-
-  window.addEventListener('keydown', (e) => {
-    if (socket.readyState !== WebSocket.OPEN) return;
-
-    // CTRL + SHIFT + ENTER -> KEYFRAME (Full Snapshot)
-    if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
-      const data = getEditorData();
-      socket.send(JSON.stringify({
-        cmd: "keyFrame",
+  const sendToFP = (cmd, data) => {
+    if (window.fpSocket.readyState === WebSocket.OPEN) {
+      window.fpSocket.send(JSON.stringify({
+        cmd: cmd,
         appName: APP_NAME,
-        data: { "hydraCode": data.allCode }
+        ...data
       }));
-      console.log("%c[FP] Keyframe (All) Sent", "color: #3498db;");
-    } 
-    
-    // CTRL + ENTER -> MICRO_CHANGE (Single Line)
-    else if (e.ctrlKey && e.key === 'Enter') {
-      const data = getEditorData();
-      if (data.currentLine.length > 0) {
-        socket.send(JSON.stringify({
-          cmd: "micro_change",
-          appName: APP_NAME,
-          param: "line_exec",
-          value: data.currentLine
-        }));
-        console.log("%c[FP] Micro-change (Line) Sent", "color: #f1c40f;");
-      }
     }
-  }, true);
+  };
+
+  const handler = (e) => {
+    const cm = document.querySelector('.CodeMirror').CodeMirror;
+    
+    // Ctrl + Shift + Enter (Keyframe)
+    if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
+       sendToFP("keyFrame", { data: { "hydraCode": cm.getValue() } });
+       console.log("[FP] Keyframe sent");
+    } 
+    // Ctrl + Enter (Micro Change)
+    else if (e.ctrlKey && e.key === 'Enter') {
+       const line = cm.getLine(cm.getCursor().line).trim();
+       sendToFP("micro_change", { param: "line_exec", value: line });
+       console.log("[FP] Micro-change sent");
+    }
+  };
+
+  // Clean up old listeners before adding new one
+  window.removeEventListener('keydown', window._fpHandler, true);
+  window._fpHandler = handler;
+  window.addEventListener('keydown', window._fpHandler, true);
 })();
