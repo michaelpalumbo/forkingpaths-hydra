@@ -72,22 +72,35 @@
     if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
       const sanitizedAll = cleanCode(cm.getValue());
       if (sanitizedAll.length > 0) {
-        window.fpSocket.send(JSON.stringify("keyFrame", { data: { "hydraCode": sanitizedAll } }));
+        window.fpSocket.send(JSON.stringify(
+          {
+            "cmd": "keyFrame",
+            "appName": "hydra,
+            "data": {
+              "full_code": sanitizedAll
+            },
+          
+          }
+        ));
         console.log("[FP] Sanitized Keyframe Sent");
       }
     } 
+
+}
     // CTRL + ENTER -> MICRO_CHANGE
     else if (e.ctrlKey && e.key === 'Enter') {
-      // If the current line is the loader, ignore it!
-      if (lineContent.includes('loadScript') && lineContent.includes('michaelpalumbo')) {
-        console.log("[FP] Ignored extension setup line.");
+      // If the current line is the FP extension, ignore it!
+      if (lineContent.includes('@fp-ignore')) {
+        console.log("[FP] Ignored line due to @fp-ignore tag.");
         return; 
       }
 
       if (lineContent.length > 0) {
-        window.fpSocket.send(JSON.stringify("micro_change", { 
-          param: `line_${lineNo}`, 
-          value: lineContent 
+        window.fpSocket.send(JSON.stringify({
+          "cmd": "micro_change",
+          "appName": "hydra",
+          "param": `line_${lineNo}`,
+          "value": lineContent
         }));
         console.log(`[FP] Sent Micro-change for line ${lineNo}`);
       }
