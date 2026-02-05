@@ -47,6 +47,32 @@
 
         break;
 
+        case 'recallState':
+          // Loop through the data keys (e.g., "line_10")
+          Object.keys(msg.data).forEach(key => {
+            if (key.startsWith("line_")) {
+              const lineIndex = parseInt(key.split("_")[1]);
+              const newCode = msg.data[key];
+    
+              // 1. Update the editor text
+              // replaceRange(newText, from, to)
+              cm.replaceRange(
+                newCode, 
+                { line: lineIndex, ch: 0 }, 
+                { line: lineIndex, ch: cm.getLine(lineIndex).length }
+              );
+    
+              // 2. Execute the line
+              try {
+                window.eval(newCode);
+                console.log(`[FP] Recalled and Executed line ${lineIndex}`);
+              } catch (evalErr) {
+                console.error("[FP] Failed to execute recalled line", evalErr);
+              }
+            }
+          });
+        break
+
       }
       console.log("[FP] Received Message:", msg);
       // Future logic for updating the editor goes here
