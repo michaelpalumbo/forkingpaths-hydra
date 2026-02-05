@@ -77,7 +77,7 @@
             window.eval(fullSanitizedCode);
             console.log("[FP] State Recalled and Pipeline Re-compiled");
           } catch (evalErr) {
-            console.error("[FP] Execution error after recall:", evalErr);
+            console.error("[FP] Execution error after recall:", evalErr)
           
           }
         break
