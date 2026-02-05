@@ -11,7 +11,15 @@
   window.fpSocket = new WebSocket(FP_URL);
   window.forkingPathsInitialized = true;
 
-  window.fpSocket.onopen = () => console.log("%c[FP] Connected to Forking Paths", "color: #2ecc71; font-weight: bold;");
+  window.fpSocket.onopen = () => {
+    console.log("%c[FP] Connected to Forking Paths", "color: #2ecc71; font-weight: bold;");
+    window.fpSocket.send(JSON.stringify({
+        cmd: "keyFrame",
+        appName: APP_NAME,
+        data: { "hydraCode": cm.getValue() }
+      }));
+      console.log("[FP] Keyframe (All) Sent");
+  }
 
   // 2. Listener for incoming messages from Forking Paths
   window.fpSocket.onmessage = (e) => { 
