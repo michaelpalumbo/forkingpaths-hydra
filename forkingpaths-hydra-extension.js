@@ -86,7 +86,7 @@
       }
     } 
 
-}
+
     // CTRL + ENTER -> MICRO_CHANGE
     else if (e.ctrlKey && e.key === 'Enter') {
       // If the current line is the FP extension, ignore it!
