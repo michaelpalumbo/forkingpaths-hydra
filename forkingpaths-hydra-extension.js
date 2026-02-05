@@ -49,28 +49,34 @@
 
         case 'recallState':
           // Loop through the data keys (e.g., "line_10")
+           // Loop through the data keys (e.g., "line_10")
+          // 1. Update the editor text for all incoming changes
           Object.keys(msg.data).forEach(key => {
             if (key.startsWith("line_")) {
               const lineIndex = parseInt(key.split("_")[1]);
               const newCode = msg.data[key];
-    
-              // 1. Update the editor text
-              // replaceRange(newText, from, to)
               cm.replaceRange(
                 newCode, 
                 { line: lineIndex, ch: 0 }, 
                 { line: lineIndex, ch: cm.getLine(lineIndex).length }
               );
-    
-              // 2. Execute the line
-              try {
-                window.eval(newCode);
-                console.log(`[FP] Recalled and Executed line ${lineIndex}`);
-              } catch (evalErr) {
-                console.error("[FP] Failed to execute recalled line", evalErr);
-              }
             }
           });
+    
+          // 2. Execute the WHOLE sanitized script
+          // This solves the ".modulate" SyntaxError because the dot is now attached to the osc() again
+          try {
+            const fullSanitizedCode = cm.getValue()
+              .split('\n')
+              .filter(line => !line.includes('@fp-ignore'))
+              .join('\n');
+              
+            window.eval(fullSanitizedCode);
+            console.log("[FP] State Recalled and Pipeline Re-compiled");
+          } catch (evalErr) {
+            console.error("[FP] Execution error after recall:", evalErr);
+          
+          };
         break
 
       }
