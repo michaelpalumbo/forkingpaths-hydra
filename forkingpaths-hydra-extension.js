@@ -5,6 +5,8 @@
     window.fpSocket.close();
   }
 
+  console.log('testing')
+
   const FP_URL = 'ws://127.0.0.1:3001/ws';
   const APP_NAME = "HydraVideoSynth";
   
