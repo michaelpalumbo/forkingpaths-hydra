@@ -30,10 +30,13 @@
     try {
       const msg = JSON.parse(e.data);
 
+      const sanitizedAll = cleanCode(cm.getValue());
+
+      
       switch (msg.cmd) {
 
         case 'getKeyframe':
-          console.log('test 2 boo')
+          console.log('test 2 boo 3')
           let message = JSON.stringify({
               cmd: "keyFrame",
               appName: APP_NAME,
