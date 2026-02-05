@@ -5,8 +5,6 @@
     window.fpSocket.close();
   }
 
-  console.log('testing')
-
   const FP_URL = 'ws://127.0.0.1:3001/ws';
   const APP_NAME = "HydraVideoSynth";
   
@@ -15,6 +13,9 @@
 
   window.fpSocket.onopen = () => console.log("%c[FP] Connected to Forking Paths", "color: #2ecc71; font-weight: bold;");
 
+  window.fpSocket.onmessage = (e) => { 
+    console.log(e.data)
+  }
   const sendToFP = (cmd, data) => {
     if (window.fpSocket.readyState === WebSocket.OPEN) {
       window.fpSocket.send(JSON.stringify({
@@ -28,16 +29,25 @@
   const handler = (e) => {
     const cm = document.querySelector('.CodeMirror').CodeMirror;
     
-    // Ctrl + Shift + Enter (Keyframe)
+    // CTRL + SHIFT + ENTER -> KEYFRAME
     if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
-       sendToFP("keyFrame", { data: { "hydraCode": cm.getValue() } });
-       console.log("[FP] Keyframe sent");
+      socket.send(JSON.stringify({
+        cmd: "keyFrame",
+        appName: APP_NAME,
+        data: { "hydraCode": cm.getValue() }
+      }));
     } 
-    // Ctrl + Enter (Micro Change)
+    // CTRL + ENTER -> MICRO_CHANGE
     else if (e.ctrlKey && e.key === 'Enter') {
-       const line = cm.getLine(cm.getCursor().line).trim();
-       sendToFP("micro_change", { param: "line_exec", value: line });
-       console.log("[FP] Micro-change sent");
+      if (lineContent.length > 0) {
+        socket.send(JSON.stringify({
+          cmd: "micro_change",
+          appName: APP_NAME,
+          // We use the line number as the parameter ID
+          param: `line_${lineNo}`, 
+          value: lineContent
+        }));
+      }
     }
   };
 
