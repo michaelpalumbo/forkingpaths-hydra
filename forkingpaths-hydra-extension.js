@@ -30,6 +30,8 @@
     try {
       const msg = JSON.parse(e.data);
 
+      const cm = document.querySelector('.CodeMirror').CodeMirror;
+
       const sanitizedAll = cleanCode(cm.getValue());
 
       console.log("[FP] Received Message:", msg);
@@ -77,7 +79,7 @@
           } catch (evalErr) {
             console.error("[FP] Execution error after recall:", evalErr);
           
-          };
+          }
         break
       }
       
