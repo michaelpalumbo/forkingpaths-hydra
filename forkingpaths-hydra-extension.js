@@ -24,7 +24,7 @@
       switch (msg.cmd) {
 
         case 'getKeyframe':
-          console.log('test')
+          console.log('test 2 boo')
           let message = JSON.stringify({
               cmd: "keyFrame",
               appName: APP_NAME,
@@ -44,11 +44,11 @@
   };
 
   const handler = (e) => {
-
+    // use this to ignore the import line for the fp extension
     const cleanCode = (rawCode) => {
       return rawCode
         .split('\n')
-        .filter(line => !line.includes('loadScript') && !line.includes('michaelpalumbo'))
+        .filter(line => !line.includes('@fp-ignore')) // Removes any line with this tag
         .join('\n')
         .trim();
     };
