@@ -25,12 +25,13 @@
 
         case 'getKeyframe':
           console.log('test')
-          window.fpSocket.send(JSON.stringify({
+          let message = JSON.stringify({
               cmd: "keyFrame",
               appName: APP_NAME,
               data: { "hydraCode": cm.getValue() }
-          }));
-          console.log("[FP] Keyframe (All) Sent\n\n:", cm.getValue());
+          })
+          window.fpSocket.send(message);
+          console.log("[FP] Keyframe (All) Sent\n\n:", message);
 
         break;
 
