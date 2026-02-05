@@ -13,18 +13,28 @@
 
   window.fpSocket.onopen = () => {
     console.log("%c[FP] Connected to Forking Paths", "color: #2ecc71; font-weight: bold;");
-    window.fpSocket.send(JSON.stringify({
-        cmd: "keyFrame",
-        appName: APP_NAME,
-        data: { "hydraCode": cm.getValue() }
-      }));
-      console.log("[FP] Keyframe (All) Sent");
+
   }
 
   // 2. Listener for incoming messages from Forking Paths
   window.fpSocket.onmessage = (e) => { 
     try {
       const msg = JSON.parse(e.data);
+
+      switch (msg.cmd) {
+
+        case 'getKeyframe':
+          
+          window.fpSocket.send(JSON.stringify({
+              cmd: "keyFrame",
+              appName: APP_NAME,
+              data: { "hydraCode": cm.getValue() }
+          }));
+          console.log("[FP] Keyframe (All) Sent");
+
+        break;
+
+      }
       console.log("[FP] Received Message:", msg);
       // Future logic for updating the editor goes here
     } catch (err) {
