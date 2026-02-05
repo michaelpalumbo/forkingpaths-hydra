@@ -1,5 +1,4 @@
 (function() {
-  // Prevent duplicate initialization
   if (window.forkingPathsInitialized) {
     console.log("[FP] Already initialized. Closing old socket...");
     window.fpSocket.close();
@@ -13,9 +12,16 @@
 
   window.fpSocket.onopen = () => console.log("%c[FP] Connected to Forking Paths", "color: #2ecc71; font-weight: bold;");
 
+  // 1. IMPROVED: Logs the parsed data so you can see cmd, param, etc.
   window.fpSocket.onmessage = (e) => { 
-    console.log(e.data)
+    try {
+      const msg = JSON.parse(e.data);
+      console.log("[FP] Received:", msg);
+    } catch (err) {
+      console.log("[FP] Raw Message:", e.data);
+    }
   }
+
   const sendToFP = (cmd, data) => {
     if (window.fpSocket.readyState === WebSocket.OPEN) {
       window.fpSocket.send(JSON.stringify({
@@ -28,30 +34,26 @@
 
   const handler = (e) => {
     const cm = document.querySelector('.CodeMirror').CodeMirror;
+    const cursor = cm.getCursor();
+    const lineNo = cursor.line;
+    const lineContent = cm.getLine(lineNo).trim();
     
-    // CTRL + SHIFT + ENTER -> KEYFRAME
+    // 2. FIXED: Use window.fpSocket instead of 'socket'
     if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
-      socket.send(JSON.stringify({
-        cmd: "keyFrame",
-        appName: APP_NAME,
-        data: { "hydraCode": cm.getValue() }
-      }));
+      sendToFP("keyFrame", { data: { "hydraCode": cm.getValue() } });
+      console.log("[FP] Sent Keyframe");
     } 
-    // CTRL + ENTER -> MICRO_CHANGE
     else if (e.ctrlKey && e.key === 'Enter') {
       if (lineContent.length > 0) {
-        socket.send(JSON.stringify({
-          cmd: "micro_change",
-          appName: APP_NAME,
-          // We use the line number as the parameter ID
+        sendToFP("micro_change", { 
           param: `line_${lineNo}`, 
-          value: lineContent
-        }));
+          value: lineContent 
+        });
+        console.log(`[FP] Sent Micro-change for line ${lineNo}`);
       }
     }
   };
 
-  // Clean up old listeners before adding new one
   window.removeEventListener('keydown', window._fpHandler, true);
   window._fpHandler = handler;
   window.addEventListener('keydown', window._fpHandler, true);
