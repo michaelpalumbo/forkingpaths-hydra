@@ -44,6 +44,15 @@
   };
 
   const handler = (e) => {
+
+    const cleanCode = (rawCode) => {
+      return rawCode
+        .split('\n')
+        .filter(line => !line.includes('loadScript') && !line.includes('michaelpalumbo'))
+        .join('\n')
+        .trim();
+    };
+    
     // We must grab the CodeMirror instance inside the handler to get the latest state
     const cm = document.querySelector('.CodeMirror').CodeMirror;
     
@@ -54,25 +63,28 @@
 
     if (window.fpSocket.readyState !== WebSocket.OPEN) return;
 
-    // CTRL + SHIFT + ENTER -> KEYFRAME (Full Snapshot)
+    // CTRL + SHIFT + ENTER -> KEYFRAME
     if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
-      window.fpSocket.send(JSON.stringify({
-        cmd: "keyFrame",
-        appName: APP_NAME,
-        data: { "hydraCode": cm.getValue() }
-      }));
-      console.log("[FP] Keyframe (All) Sent");
+      const sanitizedAll = cleanCode(cm.getValue());
+      if (sanitizedAll.length > 0) {
+        sendToFP("keyFrame", { data: { "hydraCode": sanitizedAll } });
+        console.log("[FP] Sanitized Keyframe Sent");
+      }
     } 
-    // CTRL + ENTER -> MICRO_CHANGE (Single Line)
+    // CTRL + ENTER -> MICRO_CHANGE
     else if (e.ctrlKey && e.key === 'Enter') {
+      // If the current line is the loader, ignore it!
+      if (lineContent.includes('loadScript') && lineContent.includes('michaelpalumbo')) {
+        console.log("[FP] Ignored extension setup line.");
+        return; 
+      }
+
       if (lineContent.length > 0) {
-        window.fpSocket.send(JSON.stringify({
-          cmd: "micro_change",
-          appName: APP_NAME,
+        sendToFP("micro_change", { 
           param: `line_${lineNo}`, 
-          value: lineContent
-        }));
-        console.log(`[FP] Micro-change (Line ${lineNo}) Sent`);
+          value: lineContent 
+        });
+        console.log(`[FP] Sent Micro-change for line ${lineNo}`);
       }
     }
   };
