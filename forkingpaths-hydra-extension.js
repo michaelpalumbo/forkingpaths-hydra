@@ -32,7 +32,8 @@
 
       const sanitizedAll = cleanCode(cm.getValue());
 
-      
+      console.log("[FP] Received Message:", msg);
+
       switch (msg.cmd) {
 
         case 'getKeyframe':
@@ -79,8 +80,7 @@
           };
         break
 
-      }
-      console.log("[FP] Received Message:", msg);
+      
       // Future logic for updating the editor goes here
     } catch (err) {
       console.log("[FP] Raw Message:", e.data);
