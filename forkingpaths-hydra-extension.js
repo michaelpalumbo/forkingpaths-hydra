@@ -30,7 +30,7 @@
               appName: APP_NAME,
               data: { "hydraCode": cm.getValue() }
           }));
-          console.log("[FP] Keyframe (All) Sent");
+          console.log("[FP] Keyframe (All) Sent\n\n:", cm.getValue());
 
         break;
 
