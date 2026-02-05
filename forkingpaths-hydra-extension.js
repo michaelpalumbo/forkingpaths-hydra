@@ -72,7 +72,7 @@
     if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
       const sanitizedAll = cleanCode(cm.getValue());
       if (sanitizedAll.length > 0) {
-        sendToFP("keyFrame", { data: { "hydraCode": sanitizedAll } });
+        window.fpSocket.send(JSON.stringify("keyFrame", { data: { "hydraCode": sanitizedAll } }));
         console.log("[FP] Sanitized Keyframe Sent");
       }
     } 
@@ -85,14 +85,15 @@
       }
 
       if (lineContent.length > 0) {
-        sendToFP("micro_change", { 
+        window.fpSocket.send(JSON.stringify("micro_change", { 
           param: `line_${lineNo}`, 
           value: lineContent 
-        });
+        }));
         console.log(`[FP] Sent Micro-change for line ${lineNo}`);
       }
     }
   };
+
 
   // 3. Clean up and re-attach listener
   window.removeEventListener('keydown', window._fpHandler, true);
