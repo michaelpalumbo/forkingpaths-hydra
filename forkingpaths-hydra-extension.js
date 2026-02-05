@@ -16,6 +16,15 @@
 
   }
 
+  // use this to ignore the import line for the fp extension
+  const cleanCode = (rawCode) => {
+    return rawCode
+      .split('\n')
+      .filter(line => !line.includes('@fp-ignore')) // Removes any line with this tag
+      .join('\n')
+      .trim();
+  };
+
   // 2. Listener for incoming messages from Forking Paths
   window.fpSocket.onmessage = (e) => { 
     try {
@@ -28,7 +37,7 @@
           let message = JSON.stringify({
               cmd: "keyFrame",
               appName: APP_NAME,
-              data: { "hydraCode": cm.getValue() }
+              data: { "hydraCode": sanitizedAll }
           })
           window.fpSocket.send(message);
           console.log("[FP] Keyframe (All) Sent\n\n:", message);
@@ -44,14 +53,7 @@
   };
 
   const handler = (e) => {
-    // use this to ignore the import line for the fp extension
-    const cleanCode = (rawCode) => {
-      return rawCode
-        .split('\n')
-        .filter(line => !line.includes('@fp-ignore')) // Removes any line with this tag
-        .join('\n')
-        .trim();
-    };
+    
     
     // We must grab the CodeMirror instance inside the handler to get the latest state
     const cm = document.querySelector('.CodeMirror').CodeMirror;
