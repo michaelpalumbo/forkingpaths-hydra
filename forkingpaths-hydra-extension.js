@@ -79,7 +79,7 @@
           
           };
         break
-
+      }
       
       // Future logic for updating the editor goes here
     } catch (err) {
