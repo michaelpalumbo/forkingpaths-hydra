@@ -24,7 +24,7 @@
       switch (msg.cmd) {
 
         case 'getKeyframe':
-          
+          console.log('test')
           window.fpSocket.send(JSON.stringify({
               cmd: "keyFrame",
               appName: APP_NAME,
