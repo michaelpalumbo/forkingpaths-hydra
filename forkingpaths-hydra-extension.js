@@ -4,7 +4,7 @@
     window.fpSocket.close();
   }
 
-  const FP_URL = 'ws://127.0.0.1:3001/ws';
+  const FP_URL = 'ws://127.0.0.1:8080/ws';
   const APP_NAME = "HydraVideoSynth";
   
   window.fpSocket = new WebSocket(FP_URL);
@@ -111,3 +111,5 @@
   window._fpHandler = handler;
   window.addEventListener('keydown', window._fpHandler, true);
 })();
+
+

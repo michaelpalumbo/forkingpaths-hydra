@@ -1,0 +1,25 @@
+{
+  "name": "forkingpaths-hydra",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "forkingpaths-hydra-extension.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bridge": "node wsbridge.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michaelpalumbo/forkingpaths-hydra.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/michaelpalumbo/forkingpaths-hydra/issues"
+  },
+  "homepage": "https://github.com/michaelpalumbo/forkingpaths-hydra#readme",
+  "dependencies": {
+    "nodemon": "^3.1.13",
+    "ws": "^8.19.0"
+  }
+}
