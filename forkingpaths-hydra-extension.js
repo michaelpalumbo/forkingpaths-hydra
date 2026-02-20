@@ -17,8 +17,8 @@
   const cleanCode = (rawCode) => {
     return rawCode
       .split('\n')
-      .filter(line => line.trim().length > 0) // Remove empty lines
-      .filter(line => !line.includes('@fp-ignore')) // Remove ignore tags
+      .filter(line => line.trim().length > 0)
+      .filter(line => !line.includes('@fp-ignore'))
       .join('\n')
       .trim();
   };
@@ -27,51 +27,34 @@
     try {
       const msg = JSON.parse(e.data);
       const cm = document.querySelector('.CodeMirror').CodeMirror;
-
-      console.log("[FP] Received Message:", msg);
-
       switch (msg.cmd) {
         case 'getKeyframe':
-          const currentCode = cleanCode(cm.getValue());
           window.fpSocket.send(JSON.stringify({
               cmd: "keyFrame",
               appName: APP_NAME,
-              data: currentCode 
+              data: cleanCode(cm.getValue()) 
           }));
           break;
-
         case 'recallState':
           if (msg.data) {
             Object.keys(msg.data).forEach(key => {
               if (key.startsWith("line_")) {
                 const lineIndex = parseInt(key.split("_")[1]);
-                const newCode = msg.data[key];
-                // Only replace if the line exists to avoid errors
                 if (cm.lineCount() > lineIndex) {
-                  cm.replaceRange(
-                    newCode, 
-                    { line: lineIndex, ch: 0 }, 
-                    { line: lineIndex, ch: cm.getLine(lineIndex).length }
-                  );
+                  cm.replaceRange(msg.data[key], { line: lineIndex, ch: 0 }, { line: lineIndex, ch: cm.getLine(lineIndex).length });
                 }
               }
             });
-
             try {
               const codeToRun = cleanCode(cm.getValue());
-              if (codeToRun) {
-                window.eval(codeToRun);
-                console.log("[FP] State Recalled and Pipeline Re-compiled");
-              }
+              if (codeToRun) window.eval(codeToRun);
             } catch (evalErr) {
-              console.error("[FP] Execution error after recall:", evalErr);
+              console.error("[FP] Execution error:", evalErr);
             }
           }
           break;
-      } // End Switch
-    } catch (err) {
-      console.log("[FP] Message Handling Error:", err);
-    }
+      }
+    } catch (err) { console.log("[FP] Msg Error:", err); }
   };
 
   const handler = (e) => {
@@ -82,71 +65,58 @@
 
     if (window.fpSocket.readyState !== WebSocket.OPEN) return;
 
+    // Full Script: Ctrl + Shift + Enter
     if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
       const sanitizedAll = cleanCode(cm.getValue());
       if (sanitizedAll.length > 0) {
-        window.fpSocket.send(JSON.stringify({
-          cmd: "keyFrame",
-          appName: APP_NAME,
-          data: sanitizedAll
-        }));
-        console.log("[FP] Sanitized Keyframe Sent");
+        window.fpSocket.send(JSON.stringify({ cmd: "keyFrame", appName: APP_NAME, data: sanitizedAll }));
       }
     } 
-    else if (e.ctrlKey&& e.key === 'Enter') {
-      if (lineContent.includes('@fp-ignore')) return;
-      if (lineContent.length > 0) {
+    // Single Line: Ctrl + Enter
+    else if (e.ctrlKey && e.key === 'Enter') {
+      if (!lineContent.includes('@fp-ignore') && lineContent.length > 0) {
         window.fpSocket.send(JSON.stringify({
           cmd: "micro_change",
           appName: APP_NAME,
           param: `line_${lineNo}`,
           value: lineContent
         }));
-        console.log(`[FP] Sent Micro-change for line ${lineNo}`);
       }
     }
+    // Block Execution: Alt + Enter
     else if (e.altKey && e.key === 'Enter') {
       let startLine = cursor.line;
       let endLine = cursor.line;
-      
-      console.log(startLine, endLine)
 
-      // 1. Find the start of the block (scan upwards)
+      // Scan UP to find the start of the block
       while (startLine > 0 && cm.getLine(startLine - 1).trim() !== "") {
         startLine--;
       }
 
-      // 2. Find the end of the block (scan downwards)
+      // Scan DOWN to find the end of the block
       while (endLine < cm.lineCount() - 1 && cm.getLine(endLine + 1).trim() !== "") {
         endLine++;
       }
 
-      // 3. Extract the content of that block
       const blockContent = cm.getRange(
         { line: startLine, ch: 0 },
         { line: endLine, ch: cm.getLine(endLine).length }
       );
 
       if (blockContent.trim().length > 0) {
-        console.log(blockContent)
         window.fpSocket.send(JSON.stringify({
-          cmd: "macro_change", 
+          cmd: "macro_change",
           appName: APP_NAME,
-          // Sending as a range string for your backend to parse
-          param: `block_${startLine}-${endLine}`, 
+          param: `block_${startLine}-${endLine}`,
           value: blockContent
         }));
-        
-        console.log(`[FP] Sent Macro-change for block: Lines ${startLine} to ${endLine}`);
+        console.log(`[FP] Sent Macro-change: Lines ${startLine} to ${endLine}`);
       }
     }
-    
-    
-   
-    
   };
 
   window.removeEventListener('keydown', window._fpHandler, true);
   window._fpHandler = handler;
   window.addEventListener('keydown', window._fpHandler, true);
+  console.log("[FP] Keydown listener active.");
 })();
