@@ -4,7 +4,7 @@
     window.fpSocket.close();
   }
 
-  const FP_URL = 'ws://127.0.0.1:8080/ws';
+  const FP_URL = 'ws://127.0.0.1:3001/ws';
   const APP_NAME = "HydraVideoSynth";
   
   window.fpSocket = new WebSocket(FP_URL);
@@ -93,7 +93,7 @@
         console.log("[FP] Sanitized Keyframe Sent");
       }
     } 
-    else if (e.ctrlKey && e.key === 'Enter') {
+    else if (e.ctrlKey&& e.key === 'Enter') {
       if (lineContent.includes('@fp-ignore')) return;
       if (lineContent.length > 0) {
         window.fpSocket.send(JSON.stringify({
@@ -105,11 +105,48 @@
         console.log(`[FP] Sent Micro-change for line ${lineNo}`);
       }
     }
+    else if (e.altKey && e.key === 'Enter') {
+      let startLine = cursor.line;
+      let endLine = cursor.line;
+      
+      console.log(startLine, endLine)
+
+      // 1. Find the start of the block (scan upwards)
+      while (startLine > 0 && cm.getLine(startLine - 1).trim() !== "") {
+        startLine--;
+      }
+
+      // 2. Find the end of the block (scan downwards)
+      while (endLine < cm.lineCount() - 1 && cm.getLine(endLine + 1).trim() !== "") {
+        endLine++;
+      }
+
+      // 3. Extract the content of that block
+      const blockContent = cm.getRange(
+        { line: startLine, ch: 0 },
+        { line: endLine, ch: cm.getLine(endLine).length }
+      );
+
+      if (blockContent.trim().length > 0) {
+        console.log(blockContent)
+        window.fpSocket.send(JSON.stringify({
+          cmd: "macro_change", 
+          appName: APP_NAME,
+          // Sending as a range string for your backend to parse
+          param: `block_${startLine}-${endLine}`, 
+          value: blockContent
+        }));
+        
+        console.log(`[FP] Sent Macro-change for block: Lines ${startLine} to ${endLine}`);
+      }
+    }
+    
+    
+   
+    
   };
 
   window.removeEventListener('keydown', window._fpHandler, true);
   window._fpHandler = handler;
   window.addEventListener('keydown', window._fpHandler, true);
 })();
-
-
